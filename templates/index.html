@@ -6,7 +6,7 @@
     <title>Flask App - Take a Picture</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
     <style>
-        /* Contenedor para centrar la imagen */
+        /* Contenedor para centrar el video y la imagen */
         .image-container {
             display: flex;
             justify-content: center;
@@ -14,11 +14,19 @@
             height: 100vh; /* Hace que ocupe toda la altura de la pantalla */
         }
 
-        /* Limitar el tamaño máximo de la imagen */
+        /* Limitar el tamaño máximo del video */
+        #video {
+            max-width: 100%;
+            max-height: 80vh; /* El video no excederá el 80% de la altura de la pantalla */
+            height: auto;
+        }
+
+        /* Limitar el tamaño máximo de la imagen capturada */
         #photo {
-            max-width: 100%; /* La imagen no excederá el ancho del contenedor */
-            max-height: 80vh; /* La imagen no excederá el 80% de la altura de la pantalla */
+            max-width: 100%; 
+            max-height: 80vh;
             height: auto; /* Mantiene las proporciones de la imagen */
+            display: none;
         }
     </style>
 </head>
@@ -27,11 +35,13 @@
     
     <!-- Button to take the picture -->
     <button id="startButton" class="btn btn-primary mx-auto d-block mb-4">Take a picture</button>
-    <h3>Environment</h3>
-    <!-- Contenedor para centrar la imagen -->
+    
+    <!-- Contenedor para video y la imagen tomada -->
     <div class="image-container">
-        <!-- Display the taken picture -->
-        <img id="photo" alt="Taken photo" style="display: none;">
+        <!-- Video en vivo -->
+        <video id="video" autoplay></video>
+        <!-- Imagen tomada -->
+        <img id="photo" alt="Taken photo">
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
@@ -39,40 +49,44 @@
     <script>
         const startButton = document.getElementById('startButton');
         const photo = document.getElementById('photo');
+        const video = document.getElementById('video');
 
-        // Function to capture the photo
-        startButton.addEventListener('click', async () => {
-            // Access the front camera for mobile devices or default to front camera on desktop
+        // Function to start the video stream
+        async function startVideo() {
             const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: "environment" } // Ensure we're using the front camera
+                video: { facingMode: "environment" } // Use the rear camera (main camera)
             });
 
-            // Create a hidden video element to access the camera
-            const video = document.createElement('video');
+            // Set the video source to the stream from the camera
             video.srcObject = stream;
-            video.play();
+        }
 
-            // Wait until the video metadata is loaded
+        // Start the video on page load
+        startVideo();
+
+        // Function to capture the photo from the video
+        startButton.addEventListener('click', async () => {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+
+            // Wait for the video to be fully loaded
             video.onloadedmetadata = () => {
-                // Create a canvas to capture the image
-                const canvas = document.createElement('canvas');
-                const context = canvas.getContext('2d');
-                
-                // Capture the photo after a small delay
-                setTimeout(() => {
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    
-                    // Convert the image to Data URL and display it
-                    const dataUrl = canvas.toDataURL('image/png');
-                    photo.src = dataUrl;
-                    photo.style.display = 'block'; // Show the taken photo
+                // Set the canvas size to the video size
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
 
-                    // Stop the stream and remove the video element
-                    stream.getTracks().forEach(track => track.stop());
-                    video.remove(); // Remove the video element
-                }, 500); // Delay before capturing the image
+                // Draw the video frame to the canvas
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                // Convert the canvas to a Data URL (image)
+                const dataUrl = canvas.toDataURL('image/png');
+                photo.src = dataUrl; // Set the image source to the captured photo
+                photo.style.display = 'block'; // Show the image
+
+                // Optionally stop the stream if no longer needed
+                const stream = video.srcObject;
+                const tracks = stream.getTracks();
+                tracks.forEach(track => track.stop());
             };
         });
     </script>
