@@ -44,7 +44,7 @@
         startButton.addEventListener('click', async () => {
             // Access the front camera for mobile devices or default to front camera on desktop
             const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: "user" } // Ensure we're using the front camera
+                video: { facingMode: "environment" } // Ensure we're using the front camera
             });
 
             // Create a hidden video element to access the camera
