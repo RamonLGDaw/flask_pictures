@@ -23,7 +23,7 @@
 
         /* Limitar el tamaño máximo de la imagen capturada */
         #photo {
-            max-width: 100%; 
+            max-width: 100%;
             max-height: 80vh;
             height: auto; /* Mantiene las proporciones de la imagen */
             display: none;
@@ -65,17 +65,17 @@
         startVideo();
 
         // Function to capture the photo from the video
-        startButton.addEventListener('click', async () => {
+        startButton.addEventListener('click', () => {
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
 
-            // Wait for the video to be fully loaded
-            video.onloadedmetadata = () => {
-                // Set the canvas size to the video size
+            // Ensure the video is ready and has enough data
+            if (video.videoWidth > 0 && video.videoHeight > 0) {
+                // Set canvas size to match the video dimensions
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
 
-                // Draw the video frame to the canvas
+                // Draw the current video frame to the canvas
                 context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
                 // Convert the canvas to a Data URL (image)
@@ -87,8 +87,11 @@
                 const stream = video.srcObject;
                 const tracks = stream.getTracks();
                 tracks.forEach(track => track.stop());
-            };
+            } else {
+                console.error("Video not ready for capturing.");
+            }
         });
     </script>
 </body>
 </html>
+
